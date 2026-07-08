@@ -26,44 +26,57 @@ jobs:
 
       - name: Verify Repository Contents
         run: |
-          echo "Current Directory:"
+          echo "========== CURRENT DIRECTORY =========="
           pwd
 
           echo ""
-          echo "Repository Files:"
+          echo "========== FILES =========="
           ls -la
 
           echo ""
-          echo "Dockerfile exists?"
-          ls -l Dockerfile
-
-          echo ""
-          echo "Dockerfile contents:"
+          echo "========== DOCKERFILE =========="
           cat Dockerfile
 
-          echo ""
-          echo "Docker Version:"
+      - name: Debug Docker
+        run: |
+          echo "========== DOCKER =========="
+          which docker
           docker --version
 
           echo ""
-          echo "Buildx Version:"
+          echo "========== BUILDX =========="
           docker buildx version
 
+          echo ""
+          echo "========== BUILD HELP =========="
+          docker build --help
+
+      - name: Print Variables
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPO }}
+          IMAGE_TAG: latest
+        run: |
+          echo "Registry=$ECR_REGISTRY"
+          echo "Repository=$ECR_REPOSITORY"
+          echo "Tag=$IMAGE_TAG"
+
+      - name: Test Docker Build
+        run: |
+          echo "========== TEST BUILD =========="
+          docker build .
+
       - name: Build, Tag and Push Docker Image
-        id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ secrets.ECR_REPO }}
           IMAGE_TAG: latest
         run: |
           docker build \
-            --file Dockerfile \
-            --tag ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG} \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
             .
 
-          docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
-
-          echo "image=${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}" >> $GITHUB_OUTPUT
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
   Continuous-Deployment:
     needs: Continuous-Integration
