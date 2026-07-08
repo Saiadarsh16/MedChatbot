@@ -26,8 +26,28 @@ jobs:
 
       - name: Verify Repository Contents
         run: |
+          echo "Current Directory:"
           pwd
+
+          echo ""
+          echo "Repository Files:"
           ls -la
+
+          echo ""
+          echo "Dockerfile exists?"
+          ls -l Dockerfile
+
+          echo ""
+          echo "Dockerfile contents:"
+          cat Dockerfile
+
+          echo ""
+          echo "Docker Version:"
+          docker --version
+
+          echo ""
+          echo "Buildx Version:"
+          docker buildx version
 
       - name: Build, Tag and Push Docker Image
         id: build-image
@@ -37,8 +57,8 @@ jobs:
           IMAGE_TAG: latest
         run: |
           docker build \
-            -f Dockerfile \
-            -t ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG} \
+            --file Dockerfile \
+            --tag ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG} \
             .
 
           docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
